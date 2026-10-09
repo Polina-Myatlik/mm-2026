@@ -38,11 +38,11 @@
       </div>
     </header>
 
-    <div class="subtitle" style="margin-bottom:12px">Текущие значения за последний месяц датасета — {{monthLabel}}. {{period === '24' ? 'Динамика за последние 24 месяца датасета' : 'Динамика за весь период'}}.</div>
+    <div class="subtitle" style="margin-bottom:12px"><strong>Верхние карточки показывают только последний месяц датасета — {{monthLabel}}.</strong> Учитываются статус и категория; выбор года не влияет на карточки. {{period === '24' ? 'Динамика за последние 24 месяца датасета' : 'Динамика за весь период'}}.</div>
     <section class="grid kpis">
-      <article class="card kpi"><div class="kpi-label">Заказов</div><div class="kpi-value">{{fmtInt(currentKpis.orders)}}</div><div class="kpi-note">{{monthLabel}} · За период: {{fmtInt(kpis.orders)}} заказов</div></article>
-      <article class="card kpi"><div class="kpi-label">Сумма трат</div><div class="kpi-value">{{fmtMoney(currentKpis.spend)}}</div><div class="kpi-note">{{monthLabel}} · За период: {{fmtMoney(kpis.spend)}}</div></article>
-      <article class="card kpi"><div class="kpi-label">Средняя скидка</div><div class="kpi-value">{{fmtPct(currentKpis.discount)}}%</div><div class="kpi-note">{{monthLabel}} · За период: {{fmtPct(kpis.discount)}}%</div></article>
+      <article class="card kpi"><div class="kpi-label">Заказов</div><div class="kpi-value">{{fmtInt(currentKpis.orders)}}</div><div class="kpi-note">{{monthLabel}} · Последний месяц</div></article>
+      <article class="card kpi"><div class="kpi-label">Сумма трат</div><div class="kpi-value">{{fmtMoney(currentKpis.spend)}}</div><div class="kpi-note">{{monthLabel}} · Последний месяц</div></article>
+      <article class="card kpi"><div class="kpi-label">Средняя скидка</div><div class="kpi-value">{{fmtPct(currentKpis.discount)}}%</div><div class="kpi-note">{{monthLabel}} · Среднее по товарным строкам</div></article>
     </section>
 
     <section class="grid charts">

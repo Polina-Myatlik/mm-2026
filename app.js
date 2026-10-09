@@ -5,7 +5,7 @@ createApp({
   computed:{
     latestMonth(){return d3.timeMonth(d3.max(this.rows,r=>r.date)||new Date())},
     periodStart(){return d3.timeMonth.offset(this.latestMonth,-23)},
-    currentKpis(){const f=this.filtered.filter(r=>+d3.timeMonth(r.date)===+this.latestMonth);return {orders:new Set(f.map(r=>r.order_id)).size,spend:d3.sum(f,r=>r.amount),discount:d3.mean(f,r=>r.discount)||0}},
+    currentKpis(){const f=this.rows.filter(r=>{const statusOk=this.status==='all'||(this.status==='delivered'?r.status==='доставлен':r.status==='отменен');const catOk=this.category==='all'||r.category===this.category;return statusOk&&catOk&&+d3.timeMonth(r.date)===+this.latestMonth});return {orders:new Set(f.map(r=>r.order_id)).size,spend:d3.sum(f,r=>r.amount),discount:d3.mean(f,r=>r.discount)||0}},
     monthLabel(){return d3.timeFormat('%m.%Y')(this.latestMonth)},
     years(){return [...new Set(this.rows.map(r=>r.date.getFullYear()))].sort((a,b)=>a-b)},
     filtered(){return this.rows.filter(r=>{
@@ -24,7 +24,7 @@ createApp({
     totalCategorySpend(){return d3.sum(this.baseFiltered,d=>d.amount)},
     maxCatSpend(){return d3.max(this.categories,c=>c.spend)||1}
   },
-  watch:{period(){this.$nextTick(this.draw)},status(){this.category='all';this.$nextTick(this.draw)},year(){this.category='all';this.$nextTick(this.draw)},category(){this.$nextTick(this.draw)}},
+  watch:{period(){this.$nextTick(this.draw)},status(){this.category='all';this.$nextTick(this.draw)},year(){this.$nextTick(this.draw)},category(){this.$nextTick(this.draw)}},
   async mounted(){
     try{const text=await fetch('data.csv').then(r=>{if(!r.ok)throw new Error('Не удалось загрузить data.csv');return r.text()});
       const parsed=(window.Papa?Papa.parse(text,{header:true,skipEmptyLines:true,dynamicTyping:false}).data:d3.csvParse(text));
