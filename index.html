@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Заказы клиента — интерактивный дашборд</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.5.3/papaparse.min.js"></script>
+  <style>
+    :root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#697386;--line:#e8ebf1;--accent:#5b5bd6;--accent2:#18a67a;--danger:#df5b68;--shadow:0 10px 30px rgba(24,32,51,.07)}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Manrope,system-ui,sans-serif} button,select{font:inherit}
+    .shell{max-width:1480px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:24px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}h1{font-size:34px;line-height:1.1;margin:7px 0}.subtitle{color:var(--muted);font-size:14px}.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.control{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--text)}
+    .grid{display:grid;gap:16px}.kpis{grid-template-columns:repeat(3,1fr);margin-bottom:16px}.card{background:var(--card);border:1px solid rgba(232,235,241,.9);border-radius:18px;box-shadow:var(--shadow)}.kpi{padding:20px 22px}.kpi-label{font-size:13px;color:var(--muted);font-weight:700}.kpi-value{font-size:30px;font-weight:800;margin:8px 0 2px}.kpi-note{font-size:12px;color:var(--muted)}
+    .charts{grid-template-columns:2fr 1fr;margin-bottom:16px}.card-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 20px 0;gap:16px}.card-title{font-weight:800;font-size:16px}.card-desc{font-size:12px;color:var(--muted);margin-top:4px}.chart{height:300px;padding:8px 14px 14px}.chart svg{width:100%;height:100%;overflow:visible}.axis path,.axis line{stroke:var(--line)}.axis text{fill:var(--muted);font-size:11px}.gridline{stroke:var(--line);stroke-dasharray:3 4}.line-main{fill:none;stroke:var(--accent);stroke-width:3}.line-orders{fill:none;stroke:#dc7a18;stroke-width:2.5;stroke-dasharray:6 3}.dot-orders{fill:var(--card);stroke:#dc7a18;stroke-width:2}.axis-title{font-size:11px;font-weight:600}.spend-axis-title{fill:var(--accent)}.orders-axis-title,.orders-axis text{fill:#b86312}.legend{flex-wrap:wrap}.legend-item{display:flex;gap:5px;align-items:center;white-space:nowrap}.legend-orders{background:#dc7a18}.area{fill:var(--accent);opacity:.08}.bar{fill:var(--accent);rx:5}.dot{fill:var(--card);stroke:var(--accent);stroke-width:2}.tooltip{position:fixed;pointer-events:none;background:#172033;color:#fff;border-radius:10px;padding:8px 10px;font-size:12px;box-shadow:0 8px 20px rgba(0,0,0,.2);z-index:20}.legend{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--muted)}.legend-dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+    .analysis{grid-template-columns:1.25fr 1fr;margin-bottom:16px}.table-wrap{padding:8px 20px 18px;overflow:auto}.tabs{display:flex;gap:6px}.tab{border:1px solid var(--line);background:#fff;padding:7px 10px;border-radius:9px;color:var(--muted);cursor:pointer}.tab.active{background:#f0f0ff;color:var(--accent);border-color:#d9d9ff;font-weight:700}.rank{display:grid;grid-template-columns:28px 1fr 110px 90px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.rank:last-child{border-bottom:0}.rank-header{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:12px 0 9px;border-bottom:1px solid var(--line)}.rank-num{font-weight:800;color:#a1a8b7}.item-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item-sub{font-size:11px;color:var(--muted);margin-top:2px}.num{text-align:right;font-variant-numeric:tabular-nums}.thumb{width:40px;height:40px;border-radius:10px;object-fit:cover;background:linear-gradient(135deg,#eeeefb,#f5f7fb);display:block;transition:transform .18s ease,box-shadow .18s ease;transform-origin:center;position:relative}.thumb.has-image:hover{transform:scale(1.22);z-index:5;box-shadow:0 5px 16px rgba(23,32,51,.22)}.item-cell{display:flex;gap:10px;align-items:center;min-width:0}
+    .categories{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 20px 20px}.cat{padding:13px;border:1px solid var(--line);border-radius:13px;cursor:pointer}.cat:hover{border-color:#c9c9f7}.cat.active{background:#f7f7ff;border-color:#bfc0f7}.cat-top{display:flex;justify-content:space-between;gap:8px;font-weight:800;font-size:13px}.cat-val{font-size:12px;color:var(--muted);margin-top:6px}.meter{height:5px;background:#edf0f5;border-radius:5px;margin-top:10px;overflow:hidden}.meter span{display:block;height:100%;background:var(--accent);border-radius:5px}
+    .footer{color:var(--muted);font-size:11px;margin:12px 2px 30px}.empty{height:260px;display:grid;place-items:center;color:var(--muted);font-size:13px}.loading{min-height:70vh;display:grid;place-items:center;font-weight:700}.error{padding:24px;color:var(--danger)}
+    @media(max-width:1000px){.charts,.analysis{grid-template-columns:1fr}.kpis{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.controls{justify-content:flex-start}.categories{grid-template-columns:1fr}}
+    @media(max-width:650px){.shell{padding:16px}h1{font-size:27px}.rank{grid-template-columns:24px 1fr 80px}.rank{grid-template-columns:24px minmax(140px,1fr) 85px 90px;min-width:430px}.chart{height:250px}}
+    .item-bar{height:6px;background:#edf0f5;border-radius:4px;margin-top:6px}.item-bar span{display:block;height:100%;background:var(--accent);border-radius:4px}.item-bar.money span{background:#18a67a}.tooltip{max-width:300px}.rank:focus{outline:2px solid var(--accent)}
+  </style>
+</head>
+<body>
+<div id="app">
+  <div v-if="loading" class="loading">Загружаю данные…</div>
+  <main v-else class="shell">
+    <header class="top">
+      <div><div class="eyebrow">Customer orders · D3 × Vue</div><h1>Профиль покупок клиента</h1><div class="subtitle">Месячная динамика, структура расходов и любимые товары</div></div>
+      <div class="controls">
+        <select class="control" v-model="status"><option value="delivered">Только доставленные</option><option value="all">Все заказы</option><option value="cancelled">Только отменённые</option></select>
+        <select class="control" v-model="period"><option value="24">Последние 24 месяца</option><option value="all">Весь период</option></select>
+        <select class="control" v-model="year"><option value="all">Все годы</option><option v-for="y in years" :key="y" :value="y">{{y}}</option></select>
+        <select class="control" v-model="topN"><option :value="5">Топ-5</option><option :value="8">Топ-8</option><option :value="10">Топ-10</option></select>
+      </div>
+    </header>
+
+    <div class="subtitle" style="margin-bottom:12px">Текущие значения за последний месяц датасета — {{monthLabel}}. {{period === '24' ? 'Динамика за последние 24 месяца датасета' : 'Динамика за весь период'}}.</div>
+    <section class="grid kpis">
+      <article class="card kpi"><div class="kpi-label">Заказов</div><div class="kpi-value">{{fmtInt(currentKpis.orders)}}</div><div class="kpi-note">{{monthLabel}} · За период: {{fmtInt(kpis.orders)}} заказов</div></article>
+      <article class="card kpi"><div class="kpi-label">Сумма трат</div><div class="kpi-value">{{fmtMoney(currentKpis.spend)}}</div><div class="kpi-note">{{monthLabel}} · За период: {{fmtMoney(kpis.spend)}}</div></article>
+      <article class="card kpi"><div class="kpi-label">Средняя скидка</div><div class="kpi-value">{{fmtPct(currentKpis.discount)}}%</div><div class="kpi-note">{{monthLabel}} · За период: {{fmtPct(kpis.discount)}}%</div></article>
+    </section>
+
+    <section class="grid charts">
+      <article class="card"><div class="card-head"><div><div class="card-title">Динамика трат по месяцам</div><div class="card-desc">Траты: {{ category === 'all' ? 'все категории' : category }}</div></div><div class="legend"><span class="legend-item"><span class="legend-dot"></span>Траты</span><span class="legend-item"><span class="legend-dot legend-orders"></span>Заказы</span></div></div><div id="spendChart" class="chart"></div></article>
+      <article class="card"><div class="card-head"><div><div class="card-title">Заказы по месяцам</div><div class="card-desc">Уникальные заказы: {{ category === 'all' ? 'все категории' : category }}</div></div></div><div id="ordersChart" class="chart"></div></article>
+    </section>
+
+    <article class="card" style="margin-bottom:16px"><div class="card-head"><div><div class="card-title">Средняя скидка по месяцам</div><div class="card-desc">Среднее по товарным строкам, % · применяются все фильтры</div></div></div><div id="discountChart" class="chart"></div></article>
+    <section class="grid analysis">
+      <article class="card"><div class="card-head"><div><div class="card-title">Что клиент заказывает чаще всего</div><div class="card-desc">Полосы: количество, шт. и расходы, ₽. Наведите на товар — динамика цены</div></div><div class="tabs"><button class="tab" :class="{active:rankMode==='qty'}" @click="rankMode='qty'">Частота</button><button class="tab" :class="{active:rankMode==='spend'}" @click="rankMode='spend'">Расходы</button></div></div>
+        <div class="table-wrap"><div class="rank rank-header"><div>№</div><div>Товар</div><div class="num">Количество</div><div class="num qty">Расходы</div></div><div v-if="rankedItems.length===0" class="empty">Нет данных для выбранных фильтров</div><div v-for="(item,i) in rankedItems"  :key="item.item_name" class="rank" tabindex="0" @mousemove="showItemTip($event,item)" @mouseleave="hideTip" @focus="showItemTip($event,item)" @blur="hideTip"><div class="rank-num">{{i+1}}</div><div class="item-cell"><img class="thumb" :class="{'has-image': item.hasImage}" :src="item.image" @error="onImgError" :alt="item.item_name"><div style="min-width:0"><div class="item-name" :title="item.item_name">{{item.item_name}}</div><div class="item-sub">{{item.category}}</div></div></div><div class="num">{{fmtInt(item.qty)}}<div class="item-bar"><span :style="{width:100*item.qty/maxItemQty+'%'}"></span></div></div><div class="num qty">{{fmtMoney(item.spend)}}<div class="item-bar money"><span :style="{width:100*item.spend/maxItemSpend+'%'}"></span></div></div></div></div>
+      </article>
+      <article class="card"><div class="card-head"><div><div class="card-title">Категории</div><div class="card-desc">Выберите категорию — все графики и рейтинг обновятся</div></div></div>
+        <div class="categories"><div class="cat" :class="{active:category==='all'}" @click="category='all'"><div class="cat-top"><span>Все категории</span><span>{{fmtMoney(totalCategorySpend)}}</span></div><div class="cat-val">{{fmtInt(baseFiltered.length)}} строк</div><div class="meter"><span style="width:100%"></span></div></div>
+          <div v-for="c in categories" :key="c.name" class="cat" :class="{active:category===c.name}" @click="category=c.name"><div class="cat-top"><span>{{c.name}}</span><span>{{fmtMoney(c.spend)}}</span></div><div class="cat-val">{{fmtInt(c.qty)}} ед. · {{fmtInt(c.orders)}} заказов</div><div class="meter"><span :style="{width: (100*c.spend/maxCatSpend)+'%'}"></span></div></div>
+        </div>
+      </article>
+    </section>
+    <div class="footer">Источник: загруженный CSV. Изображения товаров подключены из архива Items и сопоставлены с позициями через <b>imageMap.js</b>. Дашборд не требует backend.</div>
+  </main>
+  <div v-if="error" class="shell"><div class="card error">{{error}}</div></div>
+<div v-if="tooltip" class="tooltip" :style="{left:tooltip.x+'px',top:tooltip.y+'px'}" v-html="tooltip.html"></div>
+</div>
+<script src="imageMap.js"></script><script src="app.js"></script>
+</body>
+</html>
